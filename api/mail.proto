@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+option go_package = "gitlab.ozon.dev/capcom6/homework-2/pkg/api";
+
+package api;
+
+message Empty {
+    
+}
+
+message MailboxId {
+    string id = 1;
+}
+
+message MailboxIn {
+    string server = 1;
+    string login = 2;
+    string password = 3;
+}
+
+message MailboxOut {
+    string id = 1;
+    string server = 2;
+    string login = 3;
+
+    repeated Message messages = 10;
+}
+
+message Mailboxes {
+    repeated MailboxOut mailboxes;
+}
+
+message Message {
+    string id = 1;
+    string title = 2;
+    string from = 3;
+    int64 timestamp = 4;
+}
+
+message MailboxCreate {
+    string user_id = 1;
+    MailboxIn mailbox = 2;
+}
+
+message MailboxGet {
+    string user_id = 1;
+}
+
+service MailAggregator {
+    rpc Create(MailboxAdd) returns MailboxOut;
+    rpc Get(MailboxGet) returns Mailboxes;
+    rpc Delete(MailboxId) returns Mailboxes;
+
+    // rpc Pull() returns
+}
