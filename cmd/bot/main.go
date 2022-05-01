@@ -14,8 +14,14 @@
 
 package main
 
-import "fmt"
+import (
+	"log"
+
+	"gitlab.ozon.dev/capcom6/homework-2/internal/bot/infrastructure"
+)
 
 func main() {
-	fmt.Println("I'm a Bot")
+	if err := infrastructure.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
