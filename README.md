@@ -59,3 +59,11 @@
 4. /help - справка по командам.
 
 Пароли хранятся в БД зашифрованные единым ключом.
+
+## Рабочие заметки
+
+### Telegram
+
+Регистрация webhook: `curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/setWebhook" -H "Content-Type: application/json" -d '{"url":"https://bot.something.ru/secret_token"}'`
+
+Удаление webhook: `curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/deleteWebhook"`

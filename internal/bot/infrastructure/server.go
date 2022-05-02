@@ -16,22 +16,37 @@ package infrastructure
 
 import (
 	"context"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+
+	"gitlab.ozon.dev/capcom6/homework-2/internal/bot/config"
+	"gitlab.ozon.dev/capcom6/homework-2/internal/bot/handlers"
+	"gitlab.ozon.dev/capcom6/homework-2/pkg/telegram"
 )
 
 const timeout = 10 * time.Second
 
-type handler struct {
-}
-
 func Run() error {
-	h := &handler{}
+	cfg, err := loadConfig()
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	log.Println("Config loaded")
+	log.Printf("%+v\n", cfg)
+
+	h := handlers.New(handlers.Config{
+		URI: cfg.HTTP.Path,
+		TG: telegram.New(telegram.Config{
+			Token: cfg.Telegram.Token,
+		}),
+	})
 	srv := &http.Server{
-		Addr:              "localhost:3000",
+		Addr:              cfg.HTTP.Listen,
 		ReadTimeout:       timeout,
 		ReadHeaderTimeout: timeout,
 		WriteTimeout:      timeout,
@@ -54,17 +69,36 @@ func Run() error {
 		close(idleConnsClosed)
 	}()
 
+	log.Printf("Listen at %s\n", srv.Addr)
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		return err
 	}
 
 	<-idleConnsClosed
 
-	log.Println("Succesfully shutdown")
+	log.Println("Succesfull shutdown")
 
 	return nil
 }
 
-func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(r.URL.String()))
+func loadConfig() (*config.Config, error) {
+	fileName := os.Getenv("CONFIG_PATH")
+	if fileName == "" {
+		fileName = "./configs/bot.yml"
+	}
+
+	file, err := os.Open(fileName)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	bytes, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := config.ParseConfig(bytes)
+
+	return cfg, err
 }
