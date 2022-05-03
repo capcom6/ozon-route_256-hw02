@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  pg:
+    image: postgres
+    environment:
+      POSTGRES_DB: mail
+      POSTGRES_USER: mail
+      POSTGRES_PASSWORD: root
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
