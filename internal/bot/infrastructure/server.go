@@ -33,7 +33,7 @@ const timeout = 10 * time.Second
 func Run() error {
 	cfg, err := loadConfig()
 	if err != nil {
-		log.Panicln(err)
+		return err
 	}
 
 	log.Println("Config loaded")
