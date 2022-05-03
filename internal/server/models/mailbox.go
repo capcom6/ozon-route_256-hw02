@@ -12,16 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package models
 
-import (
-	"log"
-
-	"gitlab.ozon.dev/capcom6/homework-2/internal/server/infrastructure"
-)
-
-func main() {
-	if err := infrastructure.Run(); err != nil {
-		log.Fatal(err)
-	}
+type Mailbox struct {
+	UserId   string
+	Id       int
+	Server   string
+	Login    string
+	Password string
 }

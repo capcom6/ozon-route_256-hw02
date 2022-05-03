@@ -1,0 +1,71 @@
+// Copyright 2022 Aleksandr Soloshenko
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package repositories
+
+import (
+	"context"
+	"database/sql"
+
+	"gitlab.ozon.dev/capcom6/homework-2/internal/server/models"
+)
+
+type mailboxes struct {
+	db *sql.DB
+}
+
+const (
+	SQL_INSERT     = `INSERT INTO public.mailboxes (user_id, "server", login, "password") VALUES($1, $2, $3, $4);`
+	SQL_SELECT     = `SELECT user_id, id, "server", login, "password" FROM public.mailboxes WHERE user_id = $1;`
+	SQL_DELETE     = `DELETE FROM public.mailboxes WHERE user_id = $1 AND id = $2;`
+	SQL_DELETE_ALL = `DELETE FROM public.mailboxes WHERE user_id = $1;`
+)
+
+func New(db *sql.DB) *mailboxes {
+	return &mailboxes{
+		db: db,
+	}
+}
+
+func (r *mailboxes) Create(ctx context.Context, m *models.Mailbox) error {
+	_, err := r.db.ExecContext(ctx, SQL_INSERT, m.UserId, m.Server, m.Login, m.Password)
+
+	return err
+}
+
+func (r *mailboxes) Select(ctx context.Context, userId string) ([]*models.Mailbox, error) {
+	rows, err := r.db.QueryContext(ctx, SQL_SELECT, userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := []*models.Mailbox{}
+	for rows.Next() {
+		mb := &models.Mailbox{}
+		if err := rows.Scan(&mb.UserId, &mb.Id, &mb.Server, &mb.Login, &mb.Password); err != nil {
+			return nil, err
+		}
+	}
+	return result, nil
+}
+
+func (r *mailboxes) Delete(ctx context.Context, userId string, id int) (err error) {
+	if id == 0 {
+		_, err = r.db.ExecContext(ctx, SQL_DELETE_ALL, userId)
+	} else {
+		_, err = r.db.ExecContext(ctx, SQL_DELETE, userId, id)
+	}
+	return
+}

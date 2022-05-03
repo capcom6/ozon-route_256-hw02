@@ -12,16 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package config
 
-import (
-	"log"
-
-	"gitlab.ozon.dev/capcom6/homework-2/internal/server/infrastructure"
-)
-
-func main() {
-	if err := infrastructure.Run(); err != nil {
-		log.Fatal(err)
-	}
+type Config struct {
+	HTTP     HTTP     `yaml:"http"`
+	Database Database `yaml:"database"`
+}
+type HTTP struct {
+	Listen string `yaml:"listen"`
+}
+type Database struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Database string `yaml:"database"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
 }

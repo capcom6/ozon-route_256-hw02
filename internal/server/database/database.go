@@ -12,16 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package database
 
 import (
-	"log"
+	"context"
+	"database/sql"
+	"fmt"
 
-	"gitlab.ozon.dev/capcom6/homework-2/internal/server/infrastructure"
+	_ "github.com/jackc/pgx/v4"
 )
 
-func main() {
-	if err := infrastructure.Run(); err != nil {
-		log.Fatal(err)
-	}
+type Config struct {
+	Host     string
+	Port     int
+	Database string
+	User     string
+	Password string
+}
+
+func New(cfg Config, ctx context.Context) (*sql.DB, error) {
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database)
+	return sql.Open("postgres", dsn)
 }

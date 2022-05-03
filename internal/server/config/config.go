@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package config
 
-import (
-	"log"
+import "gopkg.in/yaml.v2"
 
-	"gitlab.ozon.dev/capcom6/homework-2/internal/server/infrastructure"
-)
+func ParseConfig(fileBytes []byte) (*Config, error) {
+	cfg := &Config{}
 
-func main() {
-	if err := infrastructure.Run(); err != nil {
-		log.Fatal(err)
+	if err := yaml.Unmarshal(fileBytes, cfg); err != nil {
+		return nil, err
 	}
+
+	return cfg, nil
 }

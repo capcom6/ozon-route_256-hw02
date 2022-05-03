@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package service
 
 import (
-	"log"
+	"context"
 
-	"gitlab.ozon.dev/capcom6/homework-2/internal/server/infrastructure"
+	"gitlab.ozon.dev/capcom6/homework-2/internal/server/models"
 )
 
-func main() {
-	if err := infrastructure.Run(); err != nil {
-		log.Fatal(err)
-	}
+type MailboxRepository interface {
+	Create(ctx context.Context, m *models.Mailbox) error
+	Select(ctx context.Context, userId string) ([]*models.Mailbox, error)
+	Delete(ctx context.Context, userId string, id int) error
 }
