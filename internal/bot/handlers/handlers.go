@@ -61,18 +61,29 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !update.Message.From.IsBot {
-		err := h.tg.SendMessage(&telegram.SendMessage{
-			ChatID: update.Message.Chat.ID,
-			Text:   "Pong: " + update.Message.Text,
-		})
-		if err != nil {
-			log.Println(err)
-		}
+	if update.Message.From.IsBot {
+		return
 	}
+
+	// err := h.tg.SendMessage(&telegram.SendMessage{
+	// 	ChatID: update.Message.Chat.ID,
+	// 	Text:   "Pong: " + update.Message.Text,
+	// })
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+
+	// message := strings.TrimSpace(update.Message.Text)
+	// if err != nil {
+	// 	return
+	// }
 
 	// log.Println(string(payload))
 	log.Printf("%+v\n", update)
 
-	w.Write([]byte(r.URL.String()))
+	// w.Write([]byte(r.URL.String()))
 }
+
+// func (h *handler) help(message string) (string, error) {
+
+// }
