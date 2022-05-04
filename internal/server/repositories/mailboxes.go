@@ -26,22 +26,32 @@ type mailboxes struct {
 }
 
 const (
-	SQL_INSERT     = `INSERT INTO public.mailboxes (user_id, "server", login, "password") VALUES($1, $2, $3, $4);`
+	SQL_INSERT     = `INSERT INTO public.mailboxes (user_id, "server", login, "password") VALUES($1, $2, $3, $4) RETURNING id;`
 	SQL_SELECT     = `SELECT user_id, id, "server", login, "password" FROM public.mailboxes WHERE user_id = $1;`
 	SQL_DELETE     = `DELETE FROM public.mailboxes WHERE user_id = $1 AND id = $2;`
 	SQL_DELETE_ALL = `DELETE FROM public.mailboxes WHERE user_id = $1;`
 )
 
-func New(db *sql.DB) *mailboxes {
+func NewMailboxes(db *sql.DB) *mailboxes {
 	return &mailboxes{
 		db: db,
 	}
 }
 
-func (r *mailboxes) Create(ctx context.Context, m *models.Mailbox) error {
-	_, err := r.db.ExecContext(ctx, SQL_INSERT, m.UserId, m.Server, m.Login, m.Password)
+func (r *mailboxes) Create(ctx context.Context, m *models.Mailbox) (int, error) {
 
-	return err
+	row := r.db.QueryRowContext(ctx, SQL_INSERT, m.UserId, m.Server, m.Login, m.Password)
+	if row.Err() != nil {
+		return 0, row.Err()
+	}
+
+	var id int
+
+	if err := row.Scan(&id); err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
 
 func (r *mailboxes) Select(ctx context.Context, userId string) ([]*models.Mailbox, error) {

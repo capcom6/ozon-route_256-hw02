@@ -9,7 +9,7 @@ message Empty {
 }
 
 message MailboxId {
-    string id = 1;
+    int32 id = 1;
 }
 
 message MailboxIn {
@@ -19,7 +19,7 @@ message MailboxIn {
 }
 
 message MailboxOut {
-    string id = 1;
+    int32 id = 1;
     string server = 2;
     string login = 3;
 }
@@ -29,11 +29,10 @@ message Mailboxes {
 }
 
 message Message {
-    string id = 1;
-    string title = 2;
-    string from = 3;
-    string to = 4;
-    int64 timestamp = 5;
+    string title = 1;
+    string from = 2;
+    string to = 3;
+    int64 timestamp = 4;
 }
 
 message Messages {
@@ -57,9 +56,9 @@ message MailboxDelete {
 }
 
 service MailAggregator {
-    rpc Create(MailboxCreate) returns (MailboxOut);
-    rpc Get(MailboxGet) returns (Mailboxes);
-    rpc Delete(MailboxId) returns (Mailboxes);
+    rpc Create(MailboxCreate) returns (Empty);
+    rpc Select(MailboxGet) returns (Mailboxes);
+    rpc Delete(MailboxDelete) returns (Mailboxes);
 
     rpc Pull(MailboxGet) returns (Messages);
 }

@@ -22,9 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MailAggregatorClient interface {
-	Create(ctx context.Context, in *MailboxCreate, opts ...grpc.CallOption) (*MailboxOut, error)
-	Get(ctx context.Context, in *MailboxGet, opts ...grpc.CallOption) (*Mailboxes, error)
-	Delete(ctx context.Context, in *MailboxId, opts ...grpc.CallOption) (*Mailboxes, error)
+	Create(ctx context.Context, in *MailboxCreate, opts ...grpc.CallOption) (*Empty, error)
+	Select(ctx context.Context, in *MailboxGet, opts ...grpc.CallOption) (*Mailboxes, error)
+	Delete(ctx context.Context, in *MailboxDelete, opts ...grpc.CallOption) (*Mailboxes, error)
 	Pull(ctx context.Context, in *MailboxGet, opts ...grpc.CallOption) (*Messages, error)
 }
 
@@ -36,8 +36,8 @@ func NewMailAggregatorClient(cc grpc.ClientConnInterface) MailAggregatorClient {
 	return &mailAggregatorClient{cc}
 }
 
-func (c *mailAggregatorClient) Create(ctx context.Context, in *MailboxCreate, opts ...grpc.CallOption) (*MailboxOut, error) {
-	out := new(MailboxOut)
+func (c *mailAggregatorClient) Create(ctx context.Context, in *MailboxCreate, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/api.MailAggregator/Create", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -45,16 +45,16 @@ func (c *mailAggregatorClient) Create(ctx context.Context, in *MailboxCreate, op
 	return out, nil
 }
 
-func (c *mailAggregatorClient) Get(ctx context.Context, in *MailboxGet, opts ...grpc.CallOption) (*Mailboxes, error) {
+func (c *mailAggregatorClient) Select(ctx context.Context, in *MailboxGet, opts ...grpc.CallOption) (*Mailboxes, error) {
 	out := new(Mailboxes)
-	err := c.cc.Invoke(ctx, "/api.MailAggregator/Get", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/api.MailAggregator/Select", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *mailAggregatorClient) Delete(ctx context.Context, in *MailboxId, opts ...grpc.CallOption) (*Mailboxes, error) {
+func (c *mailAggregatorClient) Delete(ctx context.Context, in *MailboxDelete, opts ...grpc.CallOption) (*Mailboxes, error) {
 	out := new(Mailboxes)
 	err := c.cc.Invoke(ctx, "/api.MailAggregator/Delete", in, out, opts...)
 	if err != nil {
@@ -76,9 +76,9 @@ func (c *mailAggregatorClient) Pull(ctx context.Context, in *MailboxGet, opts ..
 // All implementations must embed UnimplementedMailAggregatorServer
 // for forward compatibility
 type MailAggregatorServer interface {
-	Create(context.Context, *MailboxCreate) (*MailboxOut, error)
-	Get(context.Context, *MailboxGet) (*Mailboxes, error)
-	Delete(context.Context, *MailboxId) (*Mailboxes, error)
+	Create(context.Context, *MailboxCreate) (*Empty, error)
+	Select(context.Context, *MailboxGet) (*Mailboxes, error)
+	Delete(context.Context, *MailboxDelete) (*Mailboxes, error)
 	Pull(context.Context, *MailboxGet) (*Messages, error)
 	mustEmbedUnimplementedMailAggregatorServer()
 }
@@ -87,13 +87,13 @@ type MailAggregatorServer interface {
 type UnimplementedMailAggregatorServer struct {
 }
 
-func (UnimplementedMailAggregatorServer) Create(context.Context, *MailboxCreate) (*MailboxOut, error) {
+func (UnimplementedMailAggregatorServer) Create(context.Context, *MailboxCreate) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedMailAggregatorServer) Get(context.Context, *MailboxGet) (*Mailboxes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+func (UnimplementedMailAggregatorServer) Select(context.Context, *MailboxGet) (*Mailboxes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Select not implemented")
 }
-func (UnimplementedMailAggregatorServer) Delete(context.Context, *MailboxId) (*Mailboxes, error) {
+func (UnimplementedMailAggregatorServer) Delete(context.Context, *MailboxDelete) (*Mailboxes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedMailAggregatorServer) Pull(context.Context, *MailboxGet) (*Messages, error) {
@@ -130,26 +130,26 @@ func _MailAggregator_Create_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MailAggregator_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _MailAggregator_Select_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MailboxGet)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MailAggregatorServer).Get(ctx, in)
+		return srv.(MailAggregatorServer).Select(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/api.MailAggregator/Get",
+		FullMethod: "/api.MailAggregator/Select",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MailAggregatorServer).Get(ctx, req.(*MailboxGet))
+		return srv.(MailAggregatorServer).Select(ctx, req.(*MailboxGet))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _MailAggregator_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MailboxId)
+	in := new(MailboxDelete)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func _MailAggregator_Delete_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: "/api.MailAggregator/Delete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MailAggregatorServer).Delete(ctx, req.(*MailboxId))
+		return srv.(MailAggregatorServer).Delete(ctx, req.(*MailboxDelete))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -196,8 +196,8 @@ var MailAggregator_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MailAggregator_Create_Handler,
 		},
 		{
-			MethodName: "Get",
-			Handler:    _MailAggregator_Get_Handler,
+			MethodName: "Select",
+			Handler:    _MailAggregator_Select_Handler,
 		},
 		{
 			MethodName: "Delete",

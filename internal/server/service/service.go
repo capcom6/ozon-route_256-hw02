@@ -17,6 +17,7 @@ package service
 import (
 	"context"
 
+	"gitlab.ozon.dev/capcom6/homework-2/internal/server/models"
 	pb "gitlab.ozon.dev/capcom6/homework-2/pkg/api"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -24,21 +25,79 @@ import (
 
 type service struct {
 	pb.UnimplementedMailAggregatorServer
+	repo MailboxRepository
 }
 
-func New() *service {
-	return &service{}
+func New(repo MailboxRepository) *service {
+	return &service{
+		repo: repo,
+	}
 }
 
-func (s *service) Create(context.Context, *pb.MailboxCreate) (*pb.MailboxOut, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
+func (s *service) Create(ctx context.Context, msg *pb.MailboxCreate) (*pb.Empty, error) {
+	mb := models.Mailbox{
+		UserId:   msg.GetUserId(),
+		Server:   msg.Mailbox.GetServer(),
+		Login:    msg.Mailbox.GetLogin(),
+		Password: msg.Mailbox.GetPassword(),
+	}
+
+	if _, err := s.repo.Create(ctx, &mb); err != nil {
+		return nil, status.Errorf(codes.Internal, "could not create: %v", err)
+	}
+
+	return &pb.Empty{}, nil
 }
-func (s *service) Get(context.Context, *pb.MailboxGet) (*pb.Mailboxes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+
+func (s *service) Select(ctx context.Context, msg *pb.MailboxGet) (*pb.Mailboxes, error) {
+	mbx, err := s.selectMailboxes(ctx, msg.GetUserId())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "could not select: %v", err)
+	}
+
+	resp := pb.Mailboxes{
+		Mailboxes: mbx,
+	}
+
+	return &resp, nil
 }
-func (s *service) Delete(context.Context, *pb.MailboxId) (*pb.Mailboxes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+
+func (s *service) Delete(ctx context.Context, msg *pb.MailboxDelete) (*pb.Mailboxes, error) {
+	if err := s.repo.Delete(ctx, msg.GetUserId(), int(msg.Mailbox.GetId())); err != nil {
+		return nil, status.Errorf(codes.Internal, "could not delete: %v", err)
+	}
+
+	mbx, err := s.selectMailboxes(ctx, msg.GetUserId())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "could not select: %v", err)
+	}
+
+	resp := pb.Mailboxes{
+		Mailboxes: mbx,
+	}
+
+	return &resp, nil
 }
-func (s *service) Pull(context.Context, *pb.MailboxGet) (*pb.Messages, error) {
+
+func (s *service) Pull(ctx context.Context, msg *pb.MailboxGet) (*pb.Messages, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Pull not implemented")
+}
+
+func (s *service) selectMailboxes(ctx context.Context, userId string) ([]*pb.MailboxOut, error) {
+	mbx, err := s.repo.Select(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	mailboxes := make([]*pb.MailboxOut, len(mbx))
+
+	for _, m := range mbx {
+		mailboxes = append(mailboxes, &pb.MailboxOut{
+			Id:     int32(m.Id),
+			Server: m.Server,
+			Login:  m.Login,
+		})
+	}
+
+	return mailboxes, nil
 }

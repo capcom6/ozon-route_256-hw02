@@ -15,11 +15,10 @@
 package database
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 
-	_ "github.com/jackc/pgx/v4"
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 type Config struct {
@@ -30,7 +29,7 @@ type Config struct {
 	Password string
 }
 
-func New(cfg Config, ctx context.Context) (*sql.DB, error) {
+func New(cfg Config) (*sql.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database)
-	return sql.Open("postgres", dsn)
+	return sql.Open("pgx", dsn)
 }

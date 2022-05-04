@@ -21,7 +21,7 @@ import (
 )
 
 type MailboxRepository interface {
-	Create(ctx context.Context, m *models.Mailbox) error
+	Create(ctx context.Context, m *models.Mailbox) (int, error)
 	Select(ctx context.Context, userId string) ([]*models.Mailbox, error)
 	Delete(ctx context.Context, userId string, id int) error
 }

@@ -15,6 +15,7 @@
 package infrastructure
 
 import (
+	"database/sql"
 	"io"
 	"log"
 	"net"
@@ -22,6 +23,8 @@ import (
 	"os/signal"
 
 	"gitlab.ozon.dev/capcom6/homework-2/internal/server/config"
+	"gitlab.ozon.dev/capcom6/homework-2/internal/server/database"
+	"gitlab.ozon.dev/capcom6/homework-2/internal/server/repositories"
 	"gitlab.ozon.dev/capcom6/homework-2/internal/server/service"
 	pb "gitlab.ozon.dev/capcom6/homework-2/pkg/api"
 	"google.golang.org/grpc"
@@ -34,7 +37,15 @@ func Run() error {
 	}
 
 	log.Println("Config loaded")
-	// log.Printf("%+v\n", cfg)
+
+	db, err := connectDatabase(cfg.Database)
+	if err != nil {
+		return err
+	}
+	log.Println("Database connected")
+
+	mbrepo := repositories.NewMailboxes(db)
+	log.Println("Repository created")
 
 	lis, err := net.Listen("tcp", cfg.HTTP.Listen)
 	if err != nil {
@@ -42,7 +53,7 @@ func Run() error {
 	}
 
 	s := grpc.NewServer()
-	service := service.New()
+	service := service.New(mbrepo)
 
 	pb.RegisterMailAggregatorServer(s, service)
 
@@ -57,7 +68,7 @@ func Run() error {
 		close(idleConnsClosed)
 	}()
 
-	log.Printf("server listening at %v", lis.Addr())
+	log.Printf("Server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {
 		return err
 	}
@@ -89,4 +100,19 @@ func loadConfig() (*config.Config, error) {
 	cfg, err := config.ParseConfig(bytes)
 
 	return cfg, err
+}
+
+func connectDatabase(cfg config.Database) (*sql.DB, error) {
+	db, err := database.New(database.Config{
+		Host:     cfg.Host,
+		Port:     cfg.Port,
+		Database: cfg.Database,
+		User:     cfg.User,
+		Password: cfg.Password,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
