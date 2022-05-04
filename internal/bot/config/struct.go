@@ -17,7 +17,7 @@ package config
 type Config struct {
 	Telegram Telegram `yaml:"telegram"`
 	HTTP     HTTP     `yaml:"http"`
-	Database Database `yaml:"database"`
+	Backend  Backend  `yaml:"backend"`
 }
 type Telegram struct {
 	Token string `yaml:"token"`
@@ -26,10 +26,6 @@ type HTTP struct {
 	Listen string `yaml:"listen"`
 	Path   string `yaml:"path"`
 }
-type Database struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Database string `yaml:"database"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
+type Backend struct {
+	Host string `yaml:"host"`
 }

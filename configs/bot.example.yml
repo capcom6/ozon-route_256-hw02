@@ -17,9 +17,5 @@ telegram:
 http:
   listen: "localhost:3000"
   path: path
-database:
-  host: db
-  port: 5432
-  database: bot
-  user: bot
-  password: bot_password
+backend:
+  host: "localhost:8000"

@@ -17,6 +17,7 @@ package handlers
 import "gitlab.ozon.dev/capcom6/homework-2/pkg/telegram"
 
 type Config struct {
-	URI string
-	TG  *telegram.Telegram
+	URI       string
+	TG        *telegram.Telegram
+	Processor Interpreter
 }

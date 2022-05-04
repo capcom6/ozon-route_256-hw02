@@ -19,6 +19,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 
 	"gitlab.ozon.dev/capcom6/homework-2/pkg/telegram"
 )
@@ -26,12 +27,14 @@ import (
 type handler struct {
 	uri string
 	tg  *telegram.Telegram
+	ip  Interpreter
 }
 
 func New(cfg Config) http.Handler {
 	return &handler{
 		uri: cfg.URI,
 		tg:  cfg.TG,
+		ip:  cfg.Processor,
 	}
 }
 
@@ -82,8 +85,23 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%+v\n", update)
 
 	// w.Write([]byte(r.URL.String()))
+
+	ans, err := h.ip.Process(r.Context(), strconv.Itoa(update.Message.From.ID), update.Message.Text)
+	if err != nil {
+		log.Printf("error processing message %v\n", err)
+		ans = "К сожалению, произошла ошибка. Попробуйте позже."
+	}
+
+	if ans == "" {
+		return
+	}
+
+	err = h.tg.SendMessage(&telegram.SendMessage{
+		ChatID: update.Message.Chat.ID,
+		Text:   ans,
+	})
+	if err != nil {
+		log.Printf("error sending response %v\n", err)
+		return
+	}
 }
-
-// func (h *handler) help(message string) (string, error) {
-
-// }

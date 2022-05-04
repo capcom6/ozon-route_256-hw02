@@ -42,6 +42,7 @@ func Run() error {
 	if err != nil {
 		return err
 	}
+	defer db.Close()
 	log.Println("Database connected")
 
 	mbrepo := repositories.NewMailboxes(db)

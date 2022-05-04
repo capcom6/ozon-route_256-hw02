@@ -20,6 +20,10 @@ run-server:
 run-bot:
 	go run cmd/bot/main.go
 
+.PHONY: air-bot
+air-bot:
+	air -c bot.air.toml
+
 .PHONY: protobuf
 grpc: api/mail.proto
 	protoc --go_out=pkg --go_opt=paths=source_relative --go-grpc_out=pkg --go-grpc_opt=paths=source_relative api/mail.proto

@@ -12,15 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package models
+package handlers
 
-type UserState string
+import "context"
 
-const (
-	Start UserState = "start"
-)
-
-type User struct {
-	ID    int
-	State string
+type Interpreter interface {
+	Process(ctx context.Context, userId string, msg string) (string, error)
 }

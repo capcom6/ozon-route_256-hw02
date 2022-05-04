@@ -25,7 +25,11 @@ import (
 
 	"gitlab.ozon.dev/capcom6/homework-2/internal/bot/config"
 	"gitlab.ozon.dev/capcom6/homework-2/internal/bot/handlers"
+	"gitlab.ozon.dev/capcom6/homework-2/internal/bot/interpreter"
+	pb "gitlab.ozon.dev/capcom6/homework-2/pkg/api"
 	"gitlab.ozon.dev/capcom6/homework-2/pkg/telegram"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const timeout = 10 * time.Second
@@ -37,13 +41,17 @@ func Run() error {
 	}
 
 	log.Println("Config loaded")
-	log.Printf("%+v\n", cfg)
+
+	backend, err := connectToBackend(cfg.Backend)
+	if err != nil {
+		return err
+	}
+	log.Println("Backend connected")
 
 	h := handlers.New(handlers.Config{
-		URI: cfg.HTTP.Path,
-		TG: telegram.New(telegram.Config{
-			Token: cfg.Telegram.Token,
-		}),
+		URI:       cfg.HTTP.Path,
+		TG:        telegram.New(telegram.Config{Token: cfg.Telegram.Token}),
+		Processor: interpreter.New(backend),
 	})
 	srv := &http.Server{
 		Addr:              cfg.HTTP.Listen,
@@ -101,4 +109,12 @@ func loadConfig() (*config.Config, error) {
 	cfg, err := config.ParseConfig(bytes)
 
 	return cfg, err
+}
+
+func connectToBackend(cfg config.Backend) (pb.MailAggregatorClient, error) {
+	conn, err := grpc.Dial(cfg.Host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+	return pb.NewMailAggregatorClient(conn), nil
 }
