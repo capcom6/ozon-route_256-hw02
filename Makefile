@@ -35,3 +35,25 @@ up:
 .PHONY: migrate
 migrate:
 	goose --dir=assets/migrations up
+
+.PHONY: docker
+docker: docker-bot docker-server
+
+.PHONY: docker-bot
+docker-bot:
+	docker build -f build/package/Dockerfile.bot -t "capcom.azurecr.io/route256-bot:latest" .
+
+.PHONY: docker-server
+docker-server:
+	docker build -f build/package/Dockerfile.server -t "capcom.azurecr.io/route256-server:latest" .
+
+.PHONY: push
+push: push-bot push-server
+
+.PHONY: docker-bot
+push-bot: docker-bot
+	docker push "capcom.azurecr.io/route256-bot:latest"
+
+.PHONY: docker-server
+push-server: docker-server
+	docker push "capcom.azurecr.io/route256-server:latest"

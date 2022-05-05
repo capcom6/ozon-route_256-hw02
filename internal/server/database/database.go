@@ -30,6 +30,6 @@ type Config struct {
 }
 
 func New(cfg Config) (*sql.DB, error) {
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database)
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=prefer", cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database)
 	return sql.Open("pgx", dsn)
 }
