@@ -15,11 +15,13 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"gitlab.ozon.dev/capcom6/homework-2/pkg/telegram"
 )
@@ -68,40 +70,29 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// err := h.tg.SendMessage(&telegram.SendMessage{
-	// 	ChatID: update.Message.Chat.ID,
-	// 	Text:   "Pong: " + update.Message.Text,
-	// })
-	// if err != nil {
-	// 	log.Println(err)
-	// }
-
-	// message := strings.TrimSpace(update.Message.Text)
-	// if err != nil {
-	// 	return
-	// }
-
-	// log.Println(string(payload))
 	log.Printf("%+v\n", update)
 
-	// w.Write([]byte(r.URL.String()))
+	go func(u telegram.Update) {
+		ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelFunc()
 
-	ans, err := h.ip.Process(r.Context(), strconv.Itoa(update.Message.From.ID), update.Message.Text)
-	if err != nil {
-		log.Printf("error processing message %v\n", err)
-		ans = "К сожалению, произошла ошибка. Попробуйте позже."
-	}
+		ans, err := h.ip.Process(ctx, strconv.Itoa(u.Message.From.ID), u.Message.Text)
+		if err != nil {
+			log.Printf("error processing message %v\n", err)
+			ans = "К сожалению, произошла ошибка. Попробуйте позже."
+		}
 
-	if ans == "" {
-		return
-	}
+		if ans == "" {
+			return
+		}
 
-	err = h.tg.SendMessage(&telegram.SendMessage{
-		ChatID: update.Message.Chat.ID,
-		Text:   ans,
-	})
-	if err != nil {
-		log.Printf("error sending response %v\n", err)
-		return
-	}
+		err = h.tg.SendMessage(&telegram.SendMessage{
+			ChatID: u.Message.Chat.ID,
+			Text:   ans,
+		})
+		if err != nil {
+			log.Printf("error sending response %v\n", err)
+			return
+		}
+	}(update)
 }
