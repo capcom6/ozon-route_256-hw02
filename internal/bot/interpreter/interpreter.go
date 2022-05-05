@@ -17,7 +17,9 @@ package interpreter
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	pb "gitlab.ozon.dev/capcom6/homework-2/pkg/api"
 )
@@ -29,7 +31,6 @@ const (
 /add <server> <login> <password> - добавление почтового ящика
 /list - список почтовых ящиков
 /delete <id> - удаление выбранного почтового ящика
-/delete * - удаление всех почтовых ящиков
 /pull - получить список новых писем`
 	MSG_WELCOME = `Добро пожаловать в почтовый бот Route256
 Бот позволяет проверять наличие новой почты сразу в нескольких почтовых ящиках и отображать заголовки новых писем в чате.
@@ -76,7 +77,26 @@ func (p *processor) start(ctx context.Context, userId string, chunks []string) (
 }
 
 func (p *processor) add(ctx context.Context, userId string, chunks []string) (string, error) {
-	return "", nil
+	if len(chunks) != 3 {
+		return "Недостаточно параметров. Формат команды: /add <server> <login> <password>", nil
+	}
+
+	mb := pb.MailboxIn{
+		Server:   chunks[0],
+		Login:    chunks[1],
+		Password: chunks[2],
+	}
+
+	req := pb.MailboxCreate{
+		UserId:  userId,
+		Mailbox: &mb,
+	}
+
+	if _, err := p.client.Create(ctx, &req); err != nil {
+		return "", err
+	}
+
+	return "Ящик добавлен", nil
 }
 
 func (p *processor) list(ctx context.Context, userId string, chunks []string) (string, error) {
@@ -87,28 +107,78 @@ func (p *processor) list(ctx context.Context, userId string, chunks []string) (s
 		return "", err
 	}
 
-	builder := strings.Builder{}
-	builder.WriteString("Список ящиков:\n")
+	ans := formatMailboxesList(resp.GetMailboxes())
 
-	for _, m := range resp.GetMailboxes() {
-		builder.WriteString(fmt.Sprintf("%d. %s @ %s\n", m.GetId(), m.GetLogin(), m.GetServer()))
+	return ans, nil
+}
+
+func (p *processor) remove(ctx context.Context, userId string, chunks []string) (string, error) {
+	if len(chunks) != 1 {
+		return "Недостаточно параметров. Формат команды: /delete <id>", nil
 	}
 
-	if len(resp.GetMailboxes()) == 0 {
-		builder.WriteString("ящики отсутствуют")
+	id, err := strconv.Atoi(chunks[0])
+	if err != nil {
+		return "Некорректный идентификатор ящика", err
+	}
+
+	req := pb.MailboxDelete{
+		UserId: userId,
+		Mailbox: &pb.MailboxId{
+			Id: int32(id),
+		},
+	}
+
+	resp, err := p.client.Delete(ctx, &req)
+	if err != nil {
+		return "", err
+	}
+
+	ans := formatMailboxesList(resp.GetMailboxes())
+
+	return ans, nil
+}
+
+func (p *processor) pull(ctx context.Context, userId string, chunks []string) (string, error) {
+
+	req := pb.MailboxGet{
+		UserId: userId,
+	}
+
+	resp, err := p.client.Pull(ctx, &req)
+	if err != nil {
+		return "", err
+	}
+
+	builder := strings.Builder{}
+	builder.WriteString("Новые письма:\n")
+
+	for _, m := range resp.GetMessages() {
+		tm := time.Unix(m.GetTimestamp(), 0)
+		builder.WriteString(fmt.Sprintf("От %s на %s\n%s\n%s\n\n", m.GetFrom(), m.GetTo(), tm.Format(time.RFC3339), m.GetTitle()))
+	}
+
+	if len(resp.GetMessages()) == 0 {
+		builder.WriteString("новых писем нет")
 	}
 
 	return builder.String(), nil
 }
 
-func (p *processor) remove(ctx context.Context, userId string, chunks []string) (string, error) {
-	return "", nil
-}
-
-func (p *processor) pull(ctx context.Context, userId string, chunks []string) (string, error) {
-	return "", nil
-}
-
 func (p *processor) help(ctx context.Context, userId string, chunks []string) (string, error) {
 	return MSG_HELP, nil
+}
+
+func formatMailboxesList(lst []*pb.MailboxOut) string {
+	builder := strings.Builder{}
+	builder.WriteString("Список ящиков:\n")
+
+	for _, m := range lst {
+		builder.WriteString(fmt.Sprintf("%d. %s @ %s\n", m.GetId(), m.GetLogin(), m.GetServer()))
+	}
+
+	if len(lst) == 0 {
+		builder.WriteString("ящики отсутствуют")
+	}
+	return builder.String()
 }
