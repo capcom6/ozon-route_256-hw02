@@ -16,7 +16,6 @@ package infrastructure
 
 import (
 	"context"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -90,25 +89,12 @@ func Run() error {
 }
 
 func loadConfig() (*config.Config, error) {
-	fileName := os.Getenv("CONFIG_PATH")
-	if fileName == "" {
+	fileName, ok := os.LookupEnv("CONFIG_PATH")
+	if !ok {
 		fileName = "./configs/bot.yml"
 	}
 
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	bytes, err := io.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-
-	cfg, err := config.ParseConfig(bytes)
-
-	return cfg, err
+	return config.Load(fileName)
 }
 
 func connectToBackend(cfg config.Backend) (pb.MailAggregatorClient, error) {

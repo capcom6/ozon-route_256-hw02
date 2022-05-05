@@ -14,13 +14,56 @@
 
 package config
 
-import "gopkg.in/yaml.v2"
+import (
+	"io"
+	"os"
 
-func ParseConfig(fileBytes []byte) (*Config, error) {
+	"gopkg.in/yaml.v2"
+)
+
+func Load(path string) (*Config, error) {
+	if path == "" {
+		return FromEnv()
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	bytes, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := Parse(bytes)
+
+	return cfg, err
+}
+
+func Parse(fileBytes []byte) (*Config, error) {
 	cfg := &Config{}
 
 	if err := yaml.Unmarshal(fileBytes, cfg); err != nil {
 		return nil, err
+	}
+
+	return cfg, nil
+}
+
+func FromEnv() (*Config, error) {
+	cfg := &Config{
+		Telegram: Telegram{
+			Token: os.Getenv("TELEGRAM_TOKEN"),
+		},
+		HTTP: HTTP{
+			Listen: os.Getenv("HTTP_LISTEN"),
+			Path:   os.Getenv("HTTP_PATH"),
+		},
+		Backend: Backend{
+			Host: os.Getenv("BACKEND_HOST"),
+		},
 	}
 
 	return cfg, nil
