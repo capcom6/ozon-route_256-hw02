@@ -15,11 +15,12 @@
 package config
 
 type Config struct {
-	HTTP     HTTP     `yaml:"http"`
+	Server   Server   `yaml:"server"`
 	Database Database `yaml:"database"`
 }
-type HTTP struct {
-	Listen string `yaml:"listen"`
+type Server struct {
+	GRPC    string `yaml:"grpc"`
+	Gateway string `yaml:"gateway"`
 }
 type Database struct {
 	Host     string `yaml:"host"`

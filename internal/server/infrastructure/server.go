@@ -15,19 +15,23 @@
 package infrastructure
 
 import (
+	"context"
 	"database/sql"
 	"io"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"gitlab.ozon.dev/capcom6/homework-2/internal/server/config"
 	"gitlab.ozon.dev/capcom6/homework-2/internal/server/database"
 	"gitlab.ozon.dev/capcom6/homework-2/internal/server/repositories"
 	"gitlab.ozon.dev/capcom6/homework-2/internal/server/service"
 	pb "gitlab.ozon.dev/capcom6/homework-2/pkg/api"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func Run() error {
@@ -48,7 +52,7 @@ func Run() error {
 	mbrepo := repositories.NewMailboxes(db)
 	log.Println("Repository created")
 
-	lis, err := net.Listen("tcp", cfg.HTTP.Listen)
+	lis, err := net.Listen("tcp", cfg.Server.GRPC)
 	if err != nil {
 		return err
 	}
@@ -68,6 +72,12 @@ func Run() error {
 		s.GracefulStop()
 		close(idleConnsClosed)
 	}()
+
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	runGateway(ctx, cfg.Server.Gateway, lis.Addr().String())
 
 	log.Printf("Server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {
@@ -116,4 +126,27 @@ func connectDatabase(cfg config.Database) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func runGateway(ctx context.Context, listen string, grpcHost string) error {
+	if listen == "" {
+		return nil
+	}
+
+	// Register gRPC server endpoint
+	// Note: Make sure the gRPC server is running properly and accessible
+	mux := runtime.NewServeMux()
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	err := pb.RegisterMailAggregatorHandlerFromEndpoint(ctx, mux, grpcHost, opts)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		log.Printf("Gateway listening at %v", listen)
+		http.ListenAndServe(listen, mux)
+	}()
+
+	// Start HTTP server (and proxy calls to gRPC server endpoint)
+	return nil
 }
