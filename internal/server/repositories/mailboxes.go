@@ -67,6 +67,7 @@ func (r *mailboxes) Select(ctx context.Context, userId string) ([]*models.Mailbo
 		if err := rows.Scan(&mb.UserId, &mb.Id, &mb.Server, &mb.Login, &mb.Password); err != nil {
 			return nil, err
 		}
+		result = append(result, mb)
 	}
 	return result, nil
 }

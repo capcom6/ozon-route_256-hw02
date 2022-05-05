@@ -9,7 +9,10 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
+require github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
+
 require (
+	github.com/emersion/go-imap v1.2.1
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.12.0 // indirect

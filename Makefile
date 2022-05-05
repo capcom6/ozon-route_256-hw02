@@ -24,6 +24,10 @@ run-bot:
 air-bot:
 	air -c bot.air.toml
 
+.PHONY: air-server
+air-server:
+	air -c server.air.toml
+
 .PHONY: protobuf
 grpc: api/mail.proto
 	protoc --go_out=pkg --go_opt=paths=source_relative --go-grpc_out=pkg --go-grpc_opt=paths=source_relative api/mail.proto

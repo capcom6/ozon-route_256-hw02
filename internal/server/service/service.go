@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"gitlab.ozon.dev/capcom6/homework-2/internal/server/models"
+	"gitlab.ozon.dev/capcom6/homework-2/internal/server/puller"
 	pb "gitlab.ozon.dev/capcom6/homework-2/pkg/api"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -25,12 +26,14 @@ import (
 
 type service struct {
 	pb.UnimplementedMailAggregatorServer
-	repo MailboxRepository
+	repo   MailboxRepository
+	puller *puller.Puller
 }
 
 func New(repo MailboxRepository) *service {
 	return &service{
-		repo: repo,
+		repo:   repo,
+		puller: puller.New(),
 	}
 }
 
@@ -80,7 +83,32 @@ func (s *service) Delete(ctx context.Context, msg *pb.MailboxDelete) (*pb.Mailbo
 }
 
 func (s *service) Pull(ctx context.Context, msg *pb.MailboxGet) (*pb.Messages, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Pull not implemented")
+	mbx, err := s.repo.Select(ctx, msg.GetUserId())
+	if err != nil {
+		return nil, err
+	}
+
+	targets := makeTargets(mbx)
+
+	msgs, err := s.puller.Pull(targets)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pb.Messages{
+		Messages: []*pb.Message{},
+	}
+
+	for _, m := range msgs {
+		resp.Messages = append(resp.Messages, &pb.Message{
+			Title:     m.Title,
+			From:      m.From,
+			To:        m.To,
+			Timestamp: m.Date.Unix(),
+		})
+	}
+
+	return resp, nil
 }
 
 func (s *service) selectMailboxes(ctx context.Context, userId string) ([]*pb.MailboxOut, error) {
@@ -89,7 +117,7 @@ func (s *service) selectMailboxes(ctx context.Context, userId string) ([]*pb.Mai
 		return nil, err
 	}
 
-	mailboxes := make([]*pb.MailboxOut, len(mbx))
+	mailboxes := make([]*pb.MailboxOut, 0)
 
 	for _, m := range mbx {
 		mailboxes = append(mailboxes, &pb.MailboxOut{
@@ -100,4 +128,18 @@ func (s *service) selectMailboxes(ctx context.Context, userId string) ([]*pb.Mai
 	}
 
 	return mailboxes, nil
+}
+
+func makeTargets(mailboxes []*models.Mailbox) []puller.Target {
+	targets := []puller.Target{}
+
+	for _, m := range mailboxes {
+		targets = append(targets, puller.Target{
+			Server:   m.Server,
+			Login:    m.Login,
+			Password: m.Password,
+		})
+	}
+
+	return targets
 }
