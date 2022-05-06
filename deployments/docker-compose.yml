@@ -27,7 +27,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
   bot:
-    image: capcom.azurecr.io/route256-bot:latest
+    image: gitlab-registry.ozon.dev/capcom6/homework-2/bot:latest
     environment:
       - TELEGRAM_TOKEN
       - "HTTP_LISTEN=:3000"
@@ -41,7 +41,7 @@ services:
       - "traefik.http.routers.bot.tls.certresolver=myresolver"
 
   backend:
-    image: capcom.azurecr.io/route256-server:latest
+    image: gitlab-registry.ozon.dev/capcom6/homework-2/server:latest
     networks:
       - web
     environment:

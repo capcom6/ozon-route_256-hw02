@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+cr=gitlab-registry.ozon.dev/capcom6/homework-2/
+
 .PHONY: run-server
 run-server:
 	go run cmd/server/main.go
@@ -50,19 +52,19 @@ docker: docker-bot docker-server
 
 .PHONY: docker-bot
 docker-bot:
-	docker build -f build/package/Dockerfile.bot -t "capcom.azurecr.io/route256-bot:latest" .
+	docker build -f build/package/Dockerfile.bot -t "$(cr)bot:latest" .
 
 .PHONY: docker-server
 docker-server:
-	docker build -f build/package/Dockerfile.server -t "capcom.azurecr.io/route256-server:latest" .
+	docker build -f build/package/Dockerfile.server -t "$(cr)server:latest" .
 
 .PHONY: push
 push: push-bot push-server
 
 .PHONY: docker-bot
 push-bot: docker-bot
-	docker push "capcom.azurecr.io/route256-bot:latest"
+	docker push "$(cr)bot:latest"
 
 .PHONY: docker-server
 push-server: docker-server
-	docker push "capcom.azurecr.io/route256-server:latest"
+	docker push "$(cr)server:latest"

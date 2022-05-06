@@ -22,7 +22,7 @@ if [ -z "$APP" ]; then
     exit 1
 fi
 
-DOCKER_IMAGE="capcom.azurecr.io/route256-${APP}"
+DOCKER_IMAGE="gitlab-registry.ozon.dev/capcom6/homework-2/${APP}"
 
 PARTS=$(echo ${TAG:1} | tr "." "\n")
 VERSION=
