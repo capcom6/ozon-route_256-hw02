@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TAG=$(git tag)
+TAG=$(git describe --exact-match --tags $(git log -n1 --pretty='%h'))
 if [ -z "$TAG" ]; then
     exit 0
 fi
