@@ -17,7 +17,6 @@ package infrastructure
 import (
 	"context"
 	"database/sql"
-	"io"
 	"log"
 	"net"
 	"net/http"
@@ -92,25 +91,12 @@ func Run() error {
 }
 
 func loadConfig() (*config.Config, error) {
-	fileName := os.Getenv("CONFIG_PATH")
-	if fileName == "" {
+	fileName, ok := os.LookupEnv("CONFIG_PATH")
+	if !ok {
 		fileName = "./configs/server.yml"
 	}
 
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	bytes, err := io.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-
-	cfg, err := config.ParseConfig(bytes)
-
-	return cfg, err
+	return config.Load(fileName)
 }
 
 func connectDatabase(cfg config.Database) (*sql.DB, error) {

@@ -40,6 +40,17 @@ services:
       - "traefik.http.routers.bot.entrypoints=https"
       - "traefik.http.routers.bot.tls.certresolver=myresolver"
 
+  backend:
+    image: capcom.azurecr.io/route256-server:latest
+    networks:
+      - web
+    environment:
+      - "SERVER_GRPC=:8000"
+      - DATABASE_HOST=pg
+      - DATABASE_NAME=mail
+      - DATABASE_USER=mail
+      - DATABASE_PASSWORD=root
+
   pg:
     image: postgres:13
     environment:

@@ -14,9 +14,35 @@
 
 package config
 
-import "gopkg.in/yaml.v2"
+import (
+	"io"
+	"os"
 
-func ParseConfig(fileBytes []byte) (*Config, error) {
+	"gopkg.in/yaml.v2"
+)
+
+func Load(path string) (*Config, error) {
+	if path == "" {
+		return FromEnv()
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	bytes, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := Parse(bytes)
+
+	return cfg, err
+}
+
+func Parse(fileBytes []byte) (*Config, error) {
 	cfg := &Config{}
 
 	if err := yaml.Unmarshal(fileBytes, cfg); err != nil {
@@ -24,4 +50,22 @@ func ParseConfig(fileBytes []byte) (*Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func FromEnv() (*Config, error) {
+	cfg := Config{
+		Server: Server{
+			GRPC:    os.Getenv("SERVER_GRPC"),
+			Gateway: os.Getenv("SERVER_GATEWAY"),
+		},
+		Database: Database{
+			Host:     os.Getenv("DATABASE_HOST"),
+			Port:     getIntEnv("DATABASE_PORT", 5432),
+			Database: os.Getenv("DATABASE_NAME"),
+			User:     os.Getenv("DATABASE_USER"),
+			Password: os.Getenv("DATABASE_PASSWORD"),
+		},
+	}
+
+	return &cfg, nil
 }
