@@ -61,8 +61,8 @@ func (p *processor) Process(ctx context.Context, userId string, msg string) (str
 		return p.add(ctx, userId, chunks[1:])
 	case "/list":
 		return p.list(ctx, userId, chunks[1:])
-	case "/remove":
-		return p.remove(ctx, userId, chunks[1:])
+	case "/delete":
+		return p.delete(ctx, userId, chunks[1:])
 	case "/pull":
 		return p.pull(ctx, userId, chunks[1:])
 	case "/help":
@@ -112,7 +112,7 @@ func (p *processor) list(ctx context.Context, userId string, chunks []string) (s
 	return ans, nil
 }
 
-func (p *processor) remove(ctx context.Context, userId string, chunks []string) (string, error) {
+func (p *processor) delete(ctx context.Context, userId string, chunks []string) (string, error) {
 	if len(chunks) != 1 {
 		return "Недостаточно параметров. Формат команды: /delete <id>", nil
 	}
