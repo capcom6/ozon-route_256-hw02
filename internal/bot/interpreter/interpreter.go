@@ -36,6 +36,7 @@ const (
 	MSG_WELCOME = `Добро пожаловать в почтовый бот Route256
 Бот позволяет проверять наличие новой почты сразу в нескольких почтовых ящиках и отображать заголовки новых писем в чате.
 Для получения справки по командам введите /help`
+	MSG_ADD_PARAMETERS_COUNT = `Недостаточно параметров. Формат команды: /add <server> <login> <password>`
 )
 
 type processor struct {
@@ -79,7 +80,7 @@ func (p *processor) start(ctx context.Context, userId string, chunks []string) (
 
 func (p *processor) add(ctx context.Context, userId string, chunks []string) (domain.Answer, error) {
 	if len(chunks) != 3 {
-		return domain.Answer{Message: "Недостаточно параметров. Формат команды: /add <server> <login> <password>"}, nil
+		return domain.Answer{Message: MSG_ADD_PARAMETERS_COUNT}, nil
 	}
 
 	mb := pb.MailboxIn{

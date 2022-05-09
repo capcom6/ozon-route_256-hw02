@@ -53,7 +53,6 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload, err := io.ReadAll(r.Body)
-	defer r.Body.Close()
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
