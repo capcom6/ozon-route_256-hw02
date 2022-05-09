@@ -2,6 +2,8 @@ module gitlab.ozon.dev/capcom6/homework-2
 
 go 1.17
 
+// +heroku goVersion go1.17
+
 require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.0
 	github.com/jackc/pgx/v4 v4.16.0
