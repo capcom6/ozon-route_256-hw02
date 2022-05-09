@@ -12,14 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package handlers
+package ports
 
 import (
-	"gitlab.ozon.dev/capcom6/homework-2/internal/bot/core/ports"
+	"context"
+
+	"gitlab.ozon.dev/capcom6/homework-2/internal/bot/core/domain"
+	"gitlab.ozon.dev/capcom6/homework-2/pkg/telegram"
 )
 
-type Config struct {
-	URI       string
-	TG        ports.TelegramService
-	Processor ports.InterpreterService
+type InterpreterService interface {
+	Process(ctx context.Context, userId string, msg string) (domain.Answer, error)
+}
+
+type TelegramService interface {
+	SendMessage(msg *telegram.SendMessage) error
+	DeleteMessage(msg *telegram.DeleteMessage) error
 }

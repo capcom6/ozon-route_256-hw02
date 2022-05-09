@@ -49,6 +49,10 @@ func (t *Telegram) SendMessage(msg *SendMessage) error {
 	return t.post("sendMessage", msg)
 }
 
+func (t *Telegram) DeleteMessage(msg *DeleteMessage) error {
+	return t.post("deleteMessage", msg)
+}
+
 func (t *Telegram) post(method string, payload interface{}) error {
 	url := fmt.Sprintf("%s%s/%s", BASE_URL, t.token, method)
 	body, err := json.Marshal(payload)

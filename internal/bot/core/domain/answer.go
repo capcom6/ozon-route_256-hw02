@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package handlers
+package domain
 
-import "context"
-
-type Interpreter interface {
-	Process(ctx context.Context, userId string, msg string) (string, error)
+type Answer struct {
+	Message      string
+	DeleteSource bool
 }

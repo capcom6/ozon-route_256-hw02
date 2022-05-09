@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"gitlab.ozon.dev/capcom6/homework-2/internal/bot/core/domain"
 	pb "gitlab.ozon.dev/capcom6/homework-2/pkg/api"
 )
 
@@ -47,10 +48,10 @@ func New(client pb.MailAggregatorClient) *processor {
 	}
 }
 
-func (p *processor) Process(ctx context.Context, userId string, msg string) (string, error) {
+func (p *processor) Process(ctx context.Context, userId string, msg string) (domain.Answer, error) {
 	chunks := strings.Split(msg, " ")
 	if len(chunks) == 0 {
-		return fmt.Sprintf(MSG_UNKNOWN, msg), nil
+		return domain.Answer{Message: fmt.Sprintf(MSG_UNKNOWN, msg)}, nil
 	}
 
 	cmd := chunks[0]
@@ -69,16 +70,16 @@ func (p *processor) Process(ctx context.Context, userId string, msg string) (str
 		return p.help(ctx, userId, chunks[1:])
 	}
 
-	return fmt.Sprintf(MSG_UNKNOWN, msg), nil
+	return domain.Answer{Message: fmt.Sprintf(MSG_UNKNOWN, msg)}, nil
 }
 
-func (p *processor) start(ctx context.Context, userId string, chunks []string) (string, error) {
-	return MSG_WELCOME, nil
+func (p *processor) start(ctx context.Context, userId string, chunks []string) (domain.Answer, error) {
+	return domain.Answer{Message: MSG_WELCOME}, nil
 }
 
-func (p *processor) add(ctx context.Context, userId string, chunks []string) (string, error) {
+func (p *processor) add(ctx context.Context, userId string, chunks []string) (domain.Answer, error) {
 	if len(chunks) != 3 {
-		return "Недостаточно параметров. Формат команды: /add <server> <login> <password>", nil
+		return domain.Answer{Message: "Недостаточно параметров. Формат команды: /add <server> <login> <password>"}, nil
 	}
 
 	mb := pb.MailboxIn{
@@ -93,33 +94,36 @@ func (p *processor) add(ctx context.Context, userId string, chunks []string) (st
 	}
 
 	if _, err := p.client.Create(ctx, &req); err != nil {
-		return "", err
+		return domain.Answer{}, err
 	}
 
-	return "Ящик добавлен", nil
+	return domain.Answer{
+		Message:      fmt.Sprintf("Ящик %s @ %s добавлен", mb.Login, mb.Server),
+		DeleteSource: true,
+	}, nil
 }
 
-func (p *processor) list(ctx context.Context, userId string, chunks []string) (string, error) {
+func (p *processor) list(ctx context.Context, userId string, chunks []string) (domain.Answer, error) {
 	resp, err := p.client.Select(ctx, &pb.MailboxGet{
 		UserId: userId,
 	})
 	if err != nil {
-		return "", err
+		return domain.Answer{}, err
 	}
 
 	ans := formatMailboxesList(resp.GetMailboxes())
 
-	return ans, nil
+	return domain.Answer{Message: ans}, nil
 }
 
-func (p *processor) delete(ctx context.Context, userId string, chunks []string) (string, error) {
+func (p *processor) delete(ctx context.Context, userId string, chunks []string) (domain.Answer, error) {
 	if len(chunks) != 1 {
-		return "Недостаточно параметров. Формат команды: /delete <id>", nil
+		return domain.Answer{Message: "Недостаточно параметров. Формат команды: /delete <id>"}, nil
 	}
 
 	id, err := strconv.Atoi(chunks[0])
 	if err != nil {
-		return "Некорректный идентификатор ящика", err
+		return domain.Answer{Message: "Некорректный идентификатор ящика"}, nil
 	}
 
 	req := pb.MailboxDelete{
@@ -131,15 +135,15 @@ func (p *processor) delete(ctx context.Context, userId string, chunks []string) 
 
 	resp, err := p.client.Delete(ctx, &req)
 	if err != nil {
-		return "", err
+		return domain.Answer{}, err
 	}
 
 	ans := formatMailboxesList(resp.GetMailboxes())
 
-	return ans, nil
+	return domain.Answer{Message: ans}, nil
 }
 
-func (p *processor) pull(ctx context.Context, userId string, chunks []string) (string, error) {
+func (p *processor) pull(ctx context.Context, userId string, chunks []string) (domain.Answer, error) {
 
 	req := pb.MailboxGet{
 		UserId: userId,
@@ -147,7 +151,7 @@ func (p *processor) pull(ctx context.Context, userId string, chunks []string) (s
 
 	resp, err := p.client.Pull(ctx, &req)
 	if err != nil {
-		return "", err
+		return domain.Answer{}, err
 	}
 
 	builder := strings.Builder{}
@@ -162,11 +166,11 @@ func (p *processor) pull(ctx context.Context, userId string, chunks []string) (s
 		builder.WriteString("новых писем нет")
 	}
 
-	return builder.String(), nil
+	return domain.Answer{Message: builder.String()}, nil
 }
 
-func (p *processor) help(ctx context.Context, userId string, chunks []string) (string, error) {
-	return MSG_HELP, nil
+func (p *processor) help(ctx context.Context, userId string, chunks []string) (domain.Answer, error) {
+	return domain.Answer{Message: MSG_HELP}, nil
 }
 
 func formatMailboxesList(lst []*pb.MailboxOut) string {

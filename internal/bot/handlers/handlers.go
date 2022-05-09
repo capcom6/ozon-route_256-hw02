@@ -23,13 +23,14 @@ import (
 	"strconv"
 	"time"
 
+	"gitlab.ozon.dev/capcom6/homework-2/internal/bot/core/ports"
 	"gitlab.ozon.dev/capcom6/homework-2/pkg/telegram"
 )
 
 type handler struct {
 	uri string
-	tg  *telegram.Telegram
-	ip  Interpreter
+	tg  ports.TelegramService
+	ip  ports.InterpreterService
 }
 
 func New(cfg Config) http.Handler {
@@ -79,20 +80,29 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		ans, err := h.ip.Process(ctx, strconv.Itoa(u.Message.From.ID), u.Message.Text)
 		if err != nil {
 			log.Printf("error processing message %v\n", err)
-			ans = "К сожалению, произошла ошибка. Попробуйте позже."
+			if ans.Message == "" {
+				ans.Message = "К сожалению, произошла ошибка. Попробуйте позже."
+			}
 		}
 
-		if ans == "" {
-			return
+		if ans.Message != "" {
+			err = h.tg.SendMessage(&telegram.SendMessage{
+				ChatID: u.Message.Chat.ID,
+				Text:   ans.Message,
+			})
+			if err != nil {
+				log.Printf("error sending message %v\n", err)
+			}
+		}
+		if ans.DeleteSource {
+			err = h.tg.DeleteMessage(&telegram.DeleteMessage{
+				ChatID:    u.Message.Chat.ID,
+				MessageID: u.Message.MessageID,
+			})
+			if err != nil {
+				log.Printf("error deleting message %v\n", err)
+			}
 		}
 
-		err = h.tg.SendMessage(&telegram.SendMessage{
-			ChatID: u.Message.Chat.ID,
-			Text:   ans,
-		})
-		if err != nil {
-			log.Printf("error sending response %v\n", err)
-			return
-		}
 	}(update)
 }

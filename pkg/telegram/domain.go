@@ -44,11 +44,16 @@ type Message struct {
 	Text      string     `json:"text"`
 	Entities  []Entities `json:"entities"`
 }
+type Update struct {
+	UpdateID int     `json:"update_id"`
+	Message  Message `json:"message"`
+}
+
 type SendMessage struct {
 	ChatID int    `json:"chat_id"`
 	Text   string `json:"text"`
 }
-type Update struct {
-	UpdateID int     `json:"update_id"`
-	Message  Message `json:"message"`
+type DeleteMessage struct {
+	ChatID    int `json:"chat_id"`
+	MessageID int `json:"message_id"`
 }
