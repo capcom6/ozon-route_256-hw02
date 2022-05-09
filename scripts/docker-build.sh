@@ -24,20 +24,28 @@ fi
 
 DOCKER_IMAGE="gitlab-registry.ozon.dev/capcom6/homework-2/${APP}"
 
-PARTS=$(echo ${TAG:1} | tr "." "\n")
+FULL_VERSION=${TAG:1}
+PARTS=$(echo ${FULL_VERSION} | tr "." "\n")
 VERSION=
 
-docker build -f build/package/Dockerfile.${APP} --target default -t ${DOCKER_IMAGE}:latest .
-docker push ${DOCKER_IMAGE}:latest
+docker build -f build/package/Dockerfile.${APP} --target default -t ${DOCKER_IMAGE}:${FULL_VERSION} .
+docker push ${DOCKER_IMAGE}:${FULL_VERSION}
 
 for V in $PARTS
 do
+    if [ "$FULL_VERSION" = "$VERSION" ];
+    then
+        continue
+    fi
     if [ -n "$VERSION" ];
     then
         VERSION=${VERSION}.
     fi
     VERSION=${VERSION}${V}
     
-    docker tag ${DOCKER_IMAGE}:latest ${DOCKER_IMAGE}:${VERSION}
+    docker tag ${DOCKER_IMAGE}:${FULL_VERSION} ${DOCKER_IMAGE}:${VERSION}
     docker push ${DOCKER_IMAGE}:${VERSION}
 done
+
+docker tag ${DOCKER_IMAGE}:${FULL_VERSION} ${DOCKER_IMAGE}:latest
+docker push ${DOCKER_IMAGE}:latest
