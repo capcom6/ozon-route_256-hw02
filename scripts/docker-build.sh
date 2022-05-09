@@ -33,15 +33,16 @@ docker push ${DOCKER_IMAGE}:${FULL_VERSION}
 
 for V in $PARTS
 do
-    if [ "$FULL_VERSION" = "$VERSION" ];
-    then
-        continue
-    fi
     if [ -n "$VERSION" ];
     then
         VERSION=${VERSION}.
     fi
     VERSION=${VERSION}${V}
+
+    if [ "$FULL_VERSION" = "$VERSION" ];
+    then
+        continue
+    fi
     
     docker tag ${DOCKER_IMAGE}:${FULL_VERSION} ${DOCKER_IMAGE}:${VERSION}
     docker push ${DOCKER_IMAGE}:${VERSION}
