@@ -17,8 +17,8 @@ package service
 import (
 	"context"
 
-	"gitlab.ozon.dev/capcom6/homework-2/internal/server/models"
-	"gitlab.ozon.dev/capcom6/homework-2/internal/server/puller"
+	"gitlab.ozon.dev/capcom6/homework-2/internal/server/core/domain"
+	"gitlab.ozon.dev/capcom6/homework-2/internal/server/core/ports"
 	pb "gitlab.ozon.dev/capcom6/homework-2/pkg/api"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,26 +26,26 @@ import (
 
 type service struct {
 	pb.UnimplementedMailAggregatorServer
-	repo   MailboxRepository
-	puller *puller.Puller
+	repo   ports.MailboxesRepository
+	puller ports.MessagesRepository
 }
 
-func New(repo MailboxRepository) *service {
+func New(repo ports.MailboxesRepository, puller ports.MessagesRepository) *service {
 	return &service{
 		repo:   repo,
-		puller: puller.New(),
+		puller: puller,
 	}
 }
 
 func (s *service) Create(ctx context.Context, msg *pb.MailboxCreate) (*pb.Empty, error) {
-	mb := models.Mailbox{
+	mb := domain.Mailbox{
 		UserId:   msg.GetUserId(),
 		Server:   msg.Mailbox.GetServer(),
 		Login:    msg.Mailbox.GetLogin(),
 		Password: msg.Mailbox.GetPassword(),
 	}
 
-	if _, err := s.repo.Create(ctx, &mb); err != nil {
+	if _, err := s.repo.Create(ctx, mb); err != nil {
 		return nil, status.Errorf(codes.Internal, "could not create: %v", err)
 	}
 
@@ -88,9 +88,9 @@ func (s *service) Pull(ctx context.Context, msg *pb.MailboxGet) (*pb.Messages, e
 		return nil, err
 	}
 
-	targets := makeTargets(mbx)
+	// targets := makeTargets(mbx)
 
-	msgs, err := s.puller.Pull(targets)
+	msgs, err := s.puller.Pull(mbx)
 	if err != nil {
 		return nil, err
 	}
@@ -128,18 +128,4 @@ func (s *service) selectMailboxes(ctx context.Context, userId string) ([]*pb.Mai
 	}
 
 	return mailboxes, nil
-}
-
-func makeTargets(mailboxes []*models.Mailbox) []puller.Target {
-	targets := []puller.Target{}
-
-	for _, m := range mailboxes {
-		targets = append(targets, puller.Target{
-			Server:   m.Server,
-			Login:    m.Login,
-			Password: m.Password,
-		})
-	}
-
-	return targets
 }

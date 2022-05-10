@@ -26,6 +26,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"gitlab.ozon.dev/capcom6/homework-2/internal/server/config"
 	"gitlab.ozon.dev/capcom6/homework-2/internal/server/database"
+	"gitlab.ozon.dev/capcom6/homework-2/internal/server/puller"
 	"gitlab.ozon.dev/capcom6/homework-2/internal/server/repositories"
 	"gitlab.ozon.dev/capcom6/homework-2/internal/server/service"
 	pb "gitlab.ozon.dev/capcom6/homework-2/pkg/api"
@@ -57,7 +58,7 @@ func Run() error {
 	}
 
 	s := grpc.NewServer()
-	service := service.New(mbrepo)
+	service := service.New(mbrepo, puller.New())
 
 	pb.RegisterMailAggregatorServer(s, service)
 

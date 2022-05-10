@@ -21,6 +21,7 @@ import (
 
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
+	"gitlab.ozon.dev/capcom6/homework-2/internal/server/core/domain"
 )
 
 type Puller struct {
@@ -30,18 +31,18 @@ func New() *Puller {
 	return &Puller{}
 }
 
-func (p *Puller) Pull(targets []Target) ([]Message, error) {
+func (p *Puller) Pull(targets []domain.Mailbox) ([]domain.Message, error) {
 	if len(targets) == 0 {
-		return []Message{}, nil
+		return []domain.Message{}, nil
 	}
 
-	messages := Messages{}
+	messages := domain.Messages{}
 
 	ch := make(chan result, len(targets))
 	defer close(ch)
 
 	for _, t := range targets {
-		go func(t Target, ch chan result) {
+		go func(t domain.Mailbox, ch chan result) {
 			res, err := p.pullSingle(t)
 
 			ch <- result{
@@ -67,7 +68,7 @@ func (p *Puller) Pull(targets []Target) ([]Message, error) {
 	return messages, nil
 }
 
-func (p *Puller) pullSingle(t Target) ([]Message, error) {
+func (p *Puller) pullSingle(t domain.Mailbox) ([]domain.Message, error) {
 	c, err := client.DialTLS(t.Server+":993", nil)
 	if err != nil {
 		return nil, err
@@ -106,7 +107,7 @@ func (p *Puller) pullSingle(t Target) ([]Message, error) {
 	}()
 
 	// log.Println("Unseen messages:")
-	result := []Message{}
+	result := []domain.Message{}
 	for msg := range messages {
 		if contains(imap.SeenFlag, msg.Flags) {
 			continue
@@ -115,7 +116,7 @@ func (p *Puller) pullSingle(t Target) ([]Message, error) {
 		// log.Printf("%+v\n", msg.Flags)
 		// log.Println("* " + msg.Envelope.Subject)
 		// log.Printf(" - %+v\n", msg)
-		result = append(result, Message{
+		result = append(result, domain.Message{
 			From:  msg.Envelope.From[0].Address(),
 			To:    msg.Envelope.To[0].Address(),
 			Date:  msg.Envelope.Date,

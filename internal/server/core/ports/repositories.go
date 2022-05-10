@@ -12,12 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package models
+package ports
 
-type Mailbox struct {
-	UserId   string
-	Id       int
-	Server   string
-	Login    string
-	Password string
+import (
+	"context"
+
+	"gitlab.ozon.dev/capcom6/homework-2/internal/server/core/domain"
+)
+
+type MailboxesRepository interface {
+	Create(ctx context.Context, m domain.Mailbox) (int, error)
+	Select(ctx context.Context, userId string) ([]domain.Mailbox, error)
+	Delete(ctx context.Context, userId string, id int) error
+}
+
+type MessagesRepository interface {
+	Pull(targets []domain.Mailbox) ([]domain.Message, error)
 }

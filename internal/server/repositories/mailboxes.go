@@ -18,7 +18,7 @@ import (
 	"context"
 	"database/sql"
 
-	"gitlab.ozon.dev/capcom6/homework-2/internal/server/models"
+	"gitlab.ozon.dev/capcom6/homework-2/internal/server/core/domain"
 )
 
 type mailboxes struct {
@@ -38,7 +38,7 @@ func NewMailboxes(db *sql.DB) *mailboxes {
 	}
 }
 
-func (r *mailboxes) Create(ctx context.Context, m *models.Mailbox) (int, error) {
+func (r *mailboxes) Create(ctx context.Context, m domain.Mailbox) (int, error) {
 
 	row := r.db.QueryRowContext(ctx, SQL_INSERT, m.UserId, m.Server, m.Login, m.Password)
 	if row.Err() != nil {
@@ -54,16 +54,16 @@ func (r *mailboxes) Create(ctx context.Context, m *models.Mailbox) (int, error) 
 	return id, nil
 }
 
-func (r *mailboxes) Select(ctx context.Context, userId string) ([]*models.Mailbox, error) {
+func (r *mailboxes) Select(ctx context.Context, userId string) ([]domain.Mailbox, error) {
 	rows, err := r.db.QueryContext(ctx, SQL_SELECT, userId)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	result := []*models.Mailbox{}
+	result := []domain.Mailbox{}
 	for rows.Next() {
-		mb := &models.Mailbox{}
+		mb := domain.Mailbox{}
 		if err := rows.Scan(&mb.UserId, &mb.Id, &mb.Server, &mb.Login, &mb.Password); err != nil {
 			return nil, err
 		}

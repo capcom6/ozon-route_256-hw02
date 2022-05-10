@@ -12,19 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package puller
+package domain
 
-import (
-	"gitlab.ozon.dev/capcom6/homework-2/internal/server/core/domain"
-)
-
-type Target struct {
+type Mailbox struct {
+	UserId   string
+	Id       int
 	Server   string
 	Login    string
 	Password string
-}
-
-type result struct {
-	messages domain.Messages
-	err      error
 }

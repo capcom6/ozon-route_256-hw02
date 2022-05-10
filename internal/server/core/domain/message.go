@@ -12,16 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package service
+package domain
 
-import (
-	"context"
+import "time"
 
-	"gitlab.ozon.dev/capcom6/homework-2/internal/server/models"
-)
-
-type MailboxRepository interface {
-	Create(ctx context.Context, m *models.Mailbox) (int, error)
-	Select(ctx context.Context, userId string) ([]*models.Mailbox, error)
-	Delete(ctx context.Context, userId string, id int) error
+type Message struct {
+	From  string
+	To    string
+	Date  time.Time
+	Title string
 }
+
+type Messages []Message
+
+func (a Messages) Len() int           { return len(a) }
+func (a Messages) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a Messages) Less(i, j int) bool { return a[i].Date.Unix() < a[j].Date.Unix() }
