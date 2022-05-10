@@ -36,7 +36,9 @@ const (
 	MSG_WELCOME = `Добро пожаловать в почтовый бот Route256
 Бот позволяет проверять наличие новой почты сразу в нескольких почтовых ящиках и отображать заголовки новых писем в чате.
 Для получения справки по командам введите /help`
-	MSG_ADD_PARAMETERS_COUNT = `Недостаточно параметров. Формат команды: /add <server> <login> <password>`
+	MSG_ADD_PARAMETERS_COUNT    = `Недостаточно параметров. Формат команды: /add <server> <login> <password>`
+	MSG_DELETE_PARAMETERS_COUNT = `Недостаточно параметров. Формат команды: /delete <id>`
+	MSG_INVALID_ID              = `Некорректный идентификатор ящика`
 )
 
 type processor struct {
@@ -119,12 +121,12 @@ func (p *processor) list(ctx context.Context, userId string, chunks []string) (d
 
 func (p *processor) delete(ctx context.Context, userId string, chunks []string) (domain.Answer, error) {
 	if len(chunks) != 1 {
-		return domain.Answer{Message: "Недостаточно параметров. Формат команды: /delete <id>"}, nil
+		return domain.Answer{Message: MSG_DELETE_PARAMETERS_COUNT}, nil
 	}
 
 	id, err := strconv.Atoi(chunks[0])
 	if err != nil {
-		return domain.Answer{Message: "Некорректный идентификатор ящика"}, nil
+		return domain.Answer{Message: MSG_INVALID_ID}, nil
 	}
 
 	req := pb.MailboxDelete{
