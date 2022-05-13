@@ -115,6 +115,8 @@ backend:
 
 Развертывание выполнено на VPS с применением Traefik в качестве обратного прокси с автоматическим получением SSL-сертификатов от Let's Encrypt. Для этого использовался [Docker Compose](./deployments/docker-compose.yml).
 
+Бот доступен по адресу https://t.me/route256_mail_bot
+
 ## Рабочие заметки
 
 ### Telegram
