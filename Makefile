@@ -68,3 +68,7 @@ push-bot: docker-bot
 .PHONY: docker-server
 push-server: docker-server
 	docker push "$(cr)server:latest"
+
+.PHONY: test
+test:
+	go test -race -v -mod=readonly ./...
