@@ -21,3 +21,5 @@ database:
   database: server
   user: server
   password: server_password
+service:
+  secret_key: secret

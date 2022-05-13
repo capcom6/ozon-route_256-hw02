@@ -17,6 +17,7 @@ package config
 type Config struct {
 	Server   Server   `yaml:"server"`
 	Database Database `yaml:"database"`
+	Service  Service  `yaml:"service"`
 }
 type Server struct {
 	GRPC    string `yaml:"grpc"`
@@ -28,4 +29,7 @@ type Database struct {
 	Database string `yaml:"database"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
+}
+type Service struct {
+	SecretKey string `yaml:"secret_key"`
 }

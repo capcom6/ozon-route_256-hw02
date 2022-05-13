@@ -26,8 +26,8 @@ type mailboxes struct {
 }
 
 const (
-	SQL_INSERT     = `INSERT INTO public.mailboxes (user_id, "server", login, "password") VALUES($1, $2, $3, $4) RETURNING id;`
-	SQL_SELECT     = `SELECT user_id, id, "server", login, "password" FROM public.mailboxes WHERE user_id = $1;`
+	SQL_INSERT     = `INSERT INTO public.mailboxes (user_id, "server", login, "password", "encrypted") VALUES($1, $2, $3, $4, $5) RETURNING id;`
+	SQL_SELECT     = `SELECT user_id, id, "server", login, "password", "encrypted" FROM public.mailboxes WHERE user_id = $1;`
 	SQL_DELETE     = `DELETE FROM public.mailboxes WHERE user_id = $1 AND id = $2;`
 	SQL_DELETE_ALL = `DELETE FROM public.mailboxes WHERE user_id = $1;`
 )
@@ -39,8 +39,7 @@ func NewMailboxes(db *sql.DB) *mailboxes {
 }
 
 func (r *mailboxes) Create(ctx context.Context, m domain.Mailbox) (int, error) {
-
-	row := r.db.QueryRowContext(ctx, SQL_INSERT, m.UserId, m.Server, m.Login, m.Password)
+	row := r.db.QueryRowContext(ctx, SQL_INSERT, m.UserId, m.Server, m.Login, m.Password, m.Encrypted)
 	if row.Err() != nil {
 		return 0, row.Err()
 	}
@@ -64,7 +63,7 @@ func (r *mailboxes) Select(ctx context.Context, userId string) ([]domain.Mailbox
 	result := []domain.Mailbox{}
 	for rows.Next() {
 		mb := domain.Mailbox{}
-		if err := rows.Scan(&mb.UserId, &mb.Id, &mb.Server, &mb.Login, &mb.Password); err != nil {
+		if err := rows.Scan(&mb.UserId, &mb.Id, &mb.Server, &mb.Login, &mb.Password, &mb.Encrypted); err != nil {
 			return nil, err
 		}
 		result = append(result, mb)

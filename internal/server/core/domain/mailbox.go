@@ -15,9 +15,10 @@
 package domain
 
 type Mailbox struct {
-	UserId   string
-	Id       int
-	Server   string
-	Login    string
-	Password string
+	UserId    string
+	Id        int
+	Server    string
+	Login     string
+	Password  string
+	Encrypted bool
 }

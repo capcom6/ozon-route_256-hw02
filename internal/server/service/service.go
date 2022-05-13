@@ -16,22 +16,28 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"log"
 
+	"gitlab.ozon.dev/capcom6/homework-2/internal/server/config"
 	"gitlab.ozon.dev/capcom6/homework-2/internal/server/core/domain"
 	"gitlab.ozon.dev/capcom6/homework-2/internal/server/core/ports"
 	pb "gitlab.ozon.dev/capcom6/homework-2/pkg/api"
+	"gitlab.ozon.dev/capcom6/homework-2/pkg/crypto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type service struct {
 	pb.UnimplementedMailAggregatorServer
+	cfg    config.Service
 	repo   ports.MailboxesRepository
 	puller ports.MessagesRepository
 }
 
-func New(repo ports.MailboxesRepository, puller ports.MessagesRepository) *service {
+func New(cfg config.Service, repo ports.MailboxesRepository, puller ports.MessagesRepository) *service {
 	return &service{
+		cfg:    cfg,
 		repo:   repo,
 		puller: puller,
 	}
@@ -43,6 +49,16 @@ func (s *service) Create(ctx context.Context, msg *pb.MailboxCreate) (*pb.Empty,
 		Server:   msg.Mailbox.GetServer(),
 		Login:    msg.Mailbox.GetLogin(),
 		Password: msg.Mailbox.GetPassword(),
+	}
+
+	if s.cfg.SecretKey != "" {
+		encrypted, err := crypto.Encrypt(mb.Password, s.cfg.SecretKey)
+		if err != nil {
+			log.Println(err)
+		} else {
+			mb.Password = encrypted
+			mb.Encrypted = true
+		}
 	}
 
 	if _, err := s.repo.Create(ctx, mb); err != nil {
@@ -88,7 +104,13 @@ func (s *service) Pull(ctx context.Context, msg *pb.MailboxGet) (*pb.Messages, e
 		return nil, err
 	}
 
-	// targets := makeTargets(mbx)
+	for i := 0; i < len(mbx); i++ {
+		if mbx[i].Encrypted {
+			if mbx[i].Password, err = crypto.Decrypt(mbx[i].Password, s.cfg.SecretKey); err != nil {
+				return nil, fmt.Errorf("can't decrypt password for mailbox id %d", mbx[i].Id)
+			}
+		}
+	}
 
 	msgs, err := s.puller.Pull(mbx)
 	if err != nil {

@@ -58,7 +58,7 @@ func Run() error {
 	}
 
 	s := grpc.NewServer()
-	service := service.New(mbrepo, puller.New())
+	service := service.New(cfg.Service, mbrepo, puller.New())
 
 	pb.RegisterMailAggregatorServer(s, service)
 

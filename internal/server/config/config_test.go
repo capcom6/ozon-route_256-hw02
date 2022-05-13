@@ -21,16 +21,10 @@ import (
 )
 
 var defaultConfig = &Config{
-	Server: Server{
-		GRPC:    "localhost:8000",
-		Gateway: "localhost:8001",
-	},
-	Database: Database{
-		Host:     "db",
-		Port:     5432,
-		Database: "server",
-		User:     "server",
-		Password: "server_password",
+	Server:   Server{GRPC: "localhost:8000", Gateway: "localhost:8001"},
+	Database: Database{Host: "db", Port: 5432, Database: "server", User: "server", Password: "server_password"},
+	Service: Service{
+		SecretKey: "secret          ",
 	},
 }
 
@@ -73,6 +67,8 @@ database:
     database: server
     user: server
     password: server_password
+service:
+    secret_key: secret
 `),
 			},
 			want:    defaultConfig,
@@ -126,6 +122,8 @@ func TestFromEnv(t *testing.T) {
 				"DATABASE_NAME":     "server",
 				"DATABASE_USER":     "server",
 				"DATABASE_PASSWORD": "server_password",
+
+				"SERVICE_SECRET": "secret",
 			},
 			want:    defaultConfig,
 			wantErr: false,
