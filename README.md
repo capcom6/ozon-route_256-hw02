@@ -60,6 +60,61 @@
 
 Пароли хранятся в БД зашифрованные единым ключом.
 
+## Реализация
+
+Бот состоит из двух сервисов:
+
+1. Бэкенд - предоставляет GRPC интерфейс для выполнения операция с почтовыми ящиками и получения новых сообщений.
+2. Telegram-бот - интерфейс бэкенда к Telegram, отвечает за взаимодействие с пользователями.
+
+### Бэкенд
+
+#### Зависимости
+
+Для хранения данных требуется PostgreSQL. Создание необходимых таблиц может быть выполнена с помощью `goose`, файлы миграций находятся в [каталоге](assets/migrations/).
+
+#### Настройки
+
+Настройка возможна как через yml, так и через переменные окружения (приведены в скобках):
+
+```yml
+server:
+  grpc: "localhost:8000"    # адрес и порт прослушивания для GRPC (SERVER_GRPC)
+  gateway: "localhost:8001" # адрес и порт прослушивания для GRPC gateway (SERVER_GATEWAY)
+database:
+  host: db                  # адрес сервера PostgreSQL (DATABASE_HOST)
+  port: 5432                # порт сервера PostgreSQL (DATABASE_PORT)
+  database: server          # имя БД (DATABASE_NAME)
+  user: server              # имя пользователя (DATABASE_USER)
+  password: server_password # пароль (DATABASE_PASSWORD)
+service:
+  secret_key: secret        # ключ шифрования паролей (SERVICE_SECRET)
+```
+
+### Telegram-бот
+
+Входящие сообщения получает через веб-хук. Регистрация webhook: `curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/setWebhook" -H "Content-Type: application/json" -d '{"url":"https://bot.something.ru/secret_token"}'`
+
+#### Настройки
+
+Настройка возможна как через yml, так и через переменные окружения (приведены в скобках):
+
+```yml
+telegram:
+  token: token              # ключ доступа бота (TELEGRAM_TOKEN)
+http:
+  listen: "localhost:3000"  # адрес и порт прослушивания обновлений (HTTP_LISTEN)
+  path: path                # путь ожидания обновления (HTTP_PATH)
+backend:
+  host: "localhost:8000"    # адрес и порт бэкенда (BACKEND_HOST)
+```
+
+## Демонстрация
+
+Оба сервиса были собраны в [Docker-образы](./build/package/) и размещены в рамках [реестра GitLab](https://gitlab.ozon.dev/capcom6/homework-2/container_registry) с помощью [скрипта](./scripts/docker-build.sh).
+
+Развертывание выполнено на VPS с применением Traefik в качестве обратного прокси с автоматическим получением SSL-сертификатов от Let's Encrypt. Для этого использовался [Docker Compose](./deployments/docker-compose.yml).
+
 ## Рабочие заметки
 
 ### Telegram
