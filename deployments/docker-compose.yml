@@ -1,0 +1,65 @@
+version: "3"
+
+services:
+  traefik:
+    image: "traefik:v2.6"
+    container_name: "traefik"
+    command:
+      #- "--log.level=DEBUG"
+      # - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.http.http.redirections.entryPoint.to=https"
+      - "--entrypoints.http.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.http.http.redirections.entrypoint.permanent=true"
+      - "--entrypoints.https.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.myresolver.acme.email=capcom2me@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      # - "8080:8080"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  bot:
+    image: gitlab-registry.ozon.dev/capcom6/homework-2/bot:latest
+    environment:
+      - TELEGRAM_TOKEN
+      - "HTTP_LISTEN=:3000"
+      - HTTP_PATH
+      - "BACKEND_HOST=backend:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.bot.loadbalancer.server.port=3000"
+      - "traefik.http.routers.bot.rule=Host(`bot.capcom.me`)"
+      - "traefik.http.routers.bot.entrypoints=https"
+      - "traefik.http.routers.bot.tls.certresolver=myresolver"
+
+  backend:
+    image: gitlab-registry.ozon.dev/capcom6/homework-2/server:latest
+    networks:
+      - web
+    environment:
+      - "SERVER_GRPC=:8000"
+      - DATABASE_HOST=pg
+      - DATABASE_NAME=mail
+      - DATABASE_USER=mail
+      - DATABASE_PASSWORD=root
+
+  pg:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: mail
+      POSTGRES_USER: mail
+      POSTGRES_PASSWORD: root
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - pgdata:/var/lib/postgresql/data/pgdata:rw
+
+volumes:
+  pgdata:
